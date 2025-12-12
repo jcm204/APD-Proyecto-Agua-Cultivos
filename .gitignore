@@ -1,0 +1,19 @@
+# --- CARPETAS ESPECÍFICAS A IGNORAR ---
+pentaho/
+
+# --- PYTHON (Archivos temporales) ---
+__pycache__/
+*.py[cod]
+*$py.class
+
+# --- ENTORNOS VIRTUALES ---
+env/
+venv/
+.env
+
+# --- EDITOR (VS Code) ---
+.vscode/
+
+# --- SISTEMA OPERATIVO ---
+.DS_Store
+Thumbs.db
