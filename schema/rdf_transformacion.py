@@ -10,15 +10,10 @@ import re
 import os
 import sys
 
-# Obtener la ruta del directorio donde está el script
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-
-# Cambiar al directorio del script
 os.chdir(SCRIPT_DIR)
 
 print(f"Directorio de trabajo: {SCRIPT_DIR}\n")
-
-# Ahora todos los archivos se guardarán/leerán desde aquí
 
 # Definir namespaces
 SCHEMA = Namespace("https://schema.org/")
@@ -58,7 +53,6 @@ def convertir_a_float(valor_str):
     CORRECCIÓN: Limpia el string de números españoles (comma decimal) 
     y lo convierte a float.
     """
-    # Eliminar espacios, reemplazar coma por punto
     return float(valor_str.strip().replace(',', '.'))
 
 
@@ -132,7 +126,6 @@ def agregar_registro_agricola(row, contador):
     g.add((uri_registro, SCHEMA.about, uri_cultivo))
     
     # 4. Superficie cultivada
-    # Aplicar corrección de formato numérico
     superficie = convertir_a_float(row["SUPERFICIE CULTIVADA (ha)"])
     uri_superficie = URIRef(f"{uri_registro}/superficie")
     g.add((uri_superficie, RDF.type, SCHEMA.QuantitativeValue))
@@ -142,7 +135,6 @@ def agregar_registro_agricola(row, contador):
     g.add((uri_registro, SCHEMA.area, uri_superficie))
     
     # 5. Dotación de agua
-    # Aplicar corrección de formato numérico
     dotacion = convertir_a_float(row["DOTACION (m3/ha)"])
     uri_dotacion = URIRef(f"{uri_registro}/dotacion")
     g.add((uri_dotacion, RDF.type, SCHEMA.QuantitativeValue))
@@ -152,7 +144,6 @@ def agregar_registro_agricola(row, contador):
     g.add((uri_registro, SCHEMA.additionalProperty, uri_dotacion))
     
     # 6. Consumo estimado de agua
-    # Aplicar corrección de formato numérico
     consumo = convertir_a_float(row["CONSUMO ESTIMADO (m3)"])
     uri_consumo = URIRef(f"{uri_registro}/consumo")
     g.add((uri_consumo, RDF.type, SCHEMA.QuantitativeValue))
@@ -199,7 +190,6 @@ def generar_estadisticas():
     print("ESTADISTICAS DEL GRAFO RDF GENERADO")
     print("="*60)
     
-    # Total de tripletas
     total_tripletas = len(g)
     print(f"\nTotal de tripletas: {total_tripletas:,}")
     
@@ -242,7 +232,6 @@ def guardar_grafo(formato='turtle', archivo_salida='outputs/datos_agricolas'):
     ext = extensiones.get(formato, 'ttl')
     nombre_archivo = f"{archivo_salida}.{ext}"
     
-    # Crear carpeta outputs si no existe usando la ruta completa
     dir_salida = os.path.dirname(nombre_archivo)
     if dir_salida and not os.path.exists(dir_salida):
         os.makedirs(dir_salida)
@@ -250,8 +239,7 @@ def guardar_grafo(formato='turtle', archivo_salida='outputs/datos_agricolas'):
     g.serialize(destination=nombre_archivo, format=formato, encoding='utf-8')
     print(f"\n[OK] Grafo guardado en formato {formato.upper()}: {nombre_archivo}")
     
-    # Mostrar tamaño del archivo
-    tamanio = os.path.getsize(nombre_archivo) / 1024  # KB
+    tamanio = os.path.getsize(nombre_archivo) / 1024
     print(f"   Tamaño: {tamanio:.2f} KB")
 
 def mostrar_ejemplo():
@@ -279,7 +267,6 @@ if __name__ == "__main__":
     print("Consumo de Agua en el Sector Agrícola - Comunidad Valenciana")
     print("="*60)
     
-    # 1. Procesar el CSV
     archivo_entrada = "../pentaho/resultado_proyecto_agua.csv" 
     print(f"\nProcesando archivo: {archivo_entrada}\n")
     
@@ -289,24 +276,18 @@ if __name__ == "__main__":
         sys.exit(1)
 
     total_registros = procesar_csv(archivo_entrada)
-    
-    # 2. Generar estadísticas
     generar_estadisticas()
     
-    # 3. Guardar en múltiples formatos
     print("\n" + "="*60)
     print("GUARDANDO GRAFOS EN CARPETA 'outputs'")
     print("="*60)
     
-    # CORRECCIÓN: Forzamos la carpeta "outputs/" en cada llamada
     guardar_grafo('turtle', 'outputs/datos_agricolas')
     guardar_grafo('xml', 'outputs/datos_agricolas')
     guardar_grafo('json-ld', 'outputs/datos_agricolas')
     
-    # 4. Mostrar ejemplo
     mostrar_ejemplo()
     
-    # 5. Validación básica
     print("\n" + "="*60)
     print("VALIDACIÓN BÁSICA")
     print("="*60)

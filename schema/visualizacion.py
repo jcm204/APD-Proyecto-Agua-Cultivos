@@ -7,7 +7,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import folium
-from folium.plugins import HeatMap  # <--- Necesario para el mapa de calor
+from folium.plugins import HeatMap
 from rdflib import Graph, Namespace
 import os
 import webbrowser
@@ -85,25 +85,24 @@ def generar_mapa_calor(df):
              ''' 
     mapa.get_root().html.add_child(folium.Element(title_html))
     
-    # 1. CAPA DE CALOR (HEATMAP) AJUSTADA PARA ZONAS GRANDES
+    # Capa de calor (ajustada a zonas grandes)
     heat_data = df[['Lat', 'Lon', 'Coste']].values.tolist()
     
     HeatMap(heat_data, 
-            radius=50,       # <--- MUY IMPORTANTE: Aumentado para cubrir huecos entre pueblos
-            blur=35,         # <--- Aumentado para que se mezclen mejor las manchas
-            min_opacity=0.3, # <--- Hace que el fondo no sea blanco total, unificando la mancha
-            max_zoom=8,      # <--- Ayuda a mantener la proporción al alejar el mapa
+            radius=50,
+            blur=35,
+            min_opacity=0.3,
+            max_zoom=8,
             gradient={
-                0.2: 'blue',    # Zonas de bajo coste (azul suave)
+                0.2: 'blue',
                 0.4: 'cyan',
-                0.6: 'lime',    # Zonas medias (verde)
+                0.6: 'lime',
                 0.8: 'orange',
-                1.0: 'red'      # Puntos calientes (rojo intenso)
+                1.0: 'red'
             }
            ).add_to(mapa)
 
-    # 2. CAPA INTERACTIVA (CÍRCULOS INVISIBLES)
-    # Los mantenemos para que puedas seguir haciendo clic y ver los datos
+    # Círculos interactivos
     for _, row in df.iterrows():
         enlace_wiki = ""
         if row['Wikidata']:
@@ -126,7 +125,7 @@ def generar_mapa_calor(df):
             tooltip=f"{row['Municipio']}" # Muestra nombre al pasar el ratón
         ).add_to(mapa)
         
-    # GUARDAR EN CARPETA OUTPUTS
+    # Guardado en 'outputs/'
     archivo = 'outputs/mapa_calor_costes.html'
     mapa.save(archivo)
     print(f"[OK] Mapa de calor (estilo regional) guardado: {archivo}")
@@ -173,7 +172,7 @@ def generar_grafica_barras(g):
         print("[WARN] No hay datos para generar la gráfica")
         return
     
-    # FILTRAR: Solo los 5 grupos con mayor coste total
+    # Filtro: Solo los 5 grupos con mayor coste total
     coste_por_grupo = df.groupby('Grupo')['Coste'].sum().sort_values(ascending=False)
     top5_grupos = coste_por_grupo.head(5).index.tolist()
     
@@ -190,22 +189,18 @@ def generar_grafica_barras(g):
     df_pivot['Total'] = df_pivot.sum(axis=1)
     df_pivot = df_pivot.sort_values('Total', ascending=False).drop('Total', axis=1)
     
-    # GRÁFICA MEJORADA CON VALORES
     fig, ax = plt.subplots(figsize=(14, 8))
-    
-    # Colores más distintivos
+
     colores = {
-        'ALICANTE': '#E63946',    # Rojo
-        'CASTELLON': '#06FFA5',   # Verde menta
-        'VALENCIA': '#1D3557'     # Azul marino
+        'ALICANTE': '#E63946',
+        'CASTELLON':'#06FFA5',
+        'VALENCIA': '#1D3557'
     }
     
-    # Asegurar orden de columnas
     orden_provincias = ['ALICANTE', 'CASTELLON', 'VALENCIA']
     columnas_disponibles = [c for c in orden_provincias if c in df_pivot.columns]
     df_pivot = df_pivot[columnas_disponibles]
     
-    # Crear barras agrupadas
     bars = df_pivot.plot(
         kind='bar', 
         ax=ax,
@@ -215,7 +210,7 @@ def generar_grafica_barras(g):
         linewidth=1.5
     )
     
-    # NUEVO: Añadir valores sobre las barras
+    # Añadir valores sobre las barras
     for container in ax.containers:
         labels = []
         for bar in container:
@@ -234,7 +229,6 @@ def generar_grafica_barras(g):
         
         ax.bar_label(container, labels=labels, padding=3, fontsize=9, fontweight='bold')
     
-    # Formatear eje Y con separadores de miles
     ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f'{int(x/1e6)}M' if x >= 1e6 else f'{int(x/1e3)}K'))
     
     # Etiquetas y títulos
@@ -243,7 +237,6 @@ def generar_grafica_barras(g):
     ax.set_title('Top 5: Costes de Producción Agrícola por Provincia\nComunidad Valenciana', 
                  fontsize=16, fontweight='bold', pad=20)
     
-    # Leyenda mejorada
     ax.legend(
         title='Provincia', 
         title_fontsize=12,
@@ -254,22 +247,15 @@ def generar_grafica_barras(g):
         fancybox=True
     )
     
-    # Rotar etiquetas del eje X
     plt.xticks(rotation=30, ha='right', fontsize=11)
     plt.yticks(fontsize=10)
-    
-    # Grid sutil
     ax.grid(axis='y', alpha=0.3, linestyle='--', linewidth=0.5)
     ax.set_axisbelow(True)
-    
-    # NUEVO: Añadir un poco más de espacio arriba para los labels
     y_max = ax.get_ylim()[1]
     ax.set_ylim(0, y_max * 1.15)
-    
-    # Ajustar layout
     plt.tight_layout()
     
-    # Guardar EN CARPETA OUTPUTS
+    # Guardado en 'outputs'
     plt.savefig('outputs/grafica_cultivos_top5.png', dpi=300, bbox_inches='tight', facecolor='white')
     print(f"\n[OK] Gráfica guardada: outputs/grafica_cultivos_top5.png")
     
@@ -282,7 +268,7 @@ def generar_grafica_barras(g):
     
     print(f"\n[TOTAL] Coste total (Top 5): {totales_provincia.sum():,.0f} €")
     
-    # Tabla detallada por grupo y provincia
+
     print(f"\n[DETALLE] Detalle por grupo:")
     for grupo in df_pivot.index:
         print(f"\n   {grupo}:")
@@ -292,7 +278,6 @@ def generar_grafica_barras(g):
                 print(f"      - {provincia}: {valor:,.0f} €")
 
 def main():
-    # RUTA ACTUALIZADA A OUTPUTS
     archivo = 'outputs/datos_agricolas_enriquecido.ttl'
     
     if not os.path.exists(archivo):
@@ -304,11 +289,11 @@ def main():
     g.parse(archivo, format='turtle')
     print(f"[OK] Grafo cargado: {len(g):,} tripletas")
     
-    # 1. Mapa de Calor (Costes) - ACTIVADO
+    # 1. Mapa de Calor 
     df_mapa = cargar_datos_mapa_coste(g)
     generar_mapa_calor(df_mapa)
     
-    # 2. Gráfica
+    # 2. Gráfica de barras
     generar_grafica_barras(g)
 
 if __name__ == "__main__":

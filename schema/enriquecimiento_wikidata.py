@@ -28,11 +28,11 @@ def limpiar_label_sparql(nombre):
     """
     if not nombre: return ""
     
-    # 1. Si hay barra '/', nos quedamos solo con la primera parte
+    # Si hay '/', nos quedamos solo con la primera parte
     if '/' in nombre:
         nombre = nombre.split('/')[0]
     
-    # 2. Gestionar artículos: "Campello (El)" -> "El Campello"
+    # "Campello (El)" -> "El Campello"
     match = re.search(r'(.+?)\s*\((.+?)\)', nombre)
     if match:
         cuerpo = match.group(1).strip()
@@ -43,7 +43,6 @@ def limpiar_label_sparql(nombre):
         else:
             nombre = cuerpo
 
-    # 3. Limpieza general
     nombre = nombre.strip().replace("'", "\\'")
     return nombre
 
@@ -82,7 +81,7 @@ class WikidataEnricher:
         if cache_key in self.cache:
             return self.cache[cache_key]
         
-        # CONSULTA OPTIMIZADA: Usamos el buscador de texto primero
+        # Consulta
         if tipo == "municipio":
             query = f"""
             SELECT ?item ?itemLabel ?coord ?poblacion WHERE {{
@@ -195,7 +194,7 @@ class WikidataEnricher:
         print("ENRIQUECIMIENTO CON WIKIDATA (Filtro C. Valenciana)")
         print("="*60)
         
-        # MUNICIPIOS
+        # Municipios
         municipios = set()
         for s in self.g.subjects(SCHEMA.additionalType, Literal("municipio", lang="es")):
             n = list(self.g.objects(s, SCHEMA.name))
@@ -211,7 +210,7 @@ class WikidataEnricher:
             
         print(f"Total Municipios encontrados en Wikidata: {enriquecidos_m}")
         
-        # CULTIVOS
+        # Cultivos
         cultivos = set()
         for s in self.g.subjects(RDF.type, SCHEMA.Product):
             n = list(self.g.objects(s, SCHEMA.name))
@@ -244,8 +243,6 @@ def aplicar_enriquecimiento(archivo_rdf='outputs/datos_agricolas.ttl'):
     
     enricher = WikidataEnricher(g)
     
-    # IMPORTANTE: He subido esto a 500 para asegurarnos de que procesa
-    # TODOS los municipios y arregla el de Torrella.
     enricher.enriquecer_grafo(max_municipios=600, max_cultivos=50)
     
     archivo_salida = archivo_rdf.replace('.ttl', '_enriquecido.ttl')
@@ -258,5 +255,4 @@ if __name__ == "__main__":
     
     print(f"Directorio de trabajo: {SCRIPT_DIR}")
     
-    # RUTA CORRECTA: Busca dentro de outputs
     aplicar_enriquecimiento('outputs/datos_agricolas.ttl')
